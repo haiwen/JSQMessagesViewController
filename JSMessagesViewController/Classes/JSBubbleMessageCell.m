@@ -93,9 +93,9 @@ static const CGFloat kJSSubtitleLabelHeight = 15.0f;
 
 - (void)configureAvatarImageView:(UIImageView *)imageView forMessageType:(JSBubbleMessageType)type
 {
-    CGFloat avatarX = 0.5f;
+    CGFloat avatarX = ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) ? 7.0f : 0.5f;
     if (type == JSBubbleMessageTypeOutgoing) {
-        avatarX = (self.contentView.frame.size.width - kJSAvatarImageSize);
+        avatarX = (self.contentView.frame.size.width - kJSAvatarImageSize - avatarX);
     }
     
     CGFloat avatarY = self.contentView.frame.size.height - kJSAvatarImageSize;
@@ -104,23 +104,31 @@ static const CGFloat kJSSubtitleLabelHeight = 15.0f;
     }
     
     imageView.frame = CGRectMake(avatarX, avatarY, kJSAvatarImageSize, kJSAvatarImageSize);
-    imageView.autoresizingMask = (UIViewAutoresizingFlexibleTopMargin
-                                         | UIViewAutoresizingFlexibleLeftMargin
-                                         | UIViewAutoresizingFlexibleRightMargin);
-    
+    imageView.autoresizingMask = (type == JSBubbleMessageTypeOutgoing) ?
+        (UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin) :
+        (UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin);
+
     [self.contentView addSubview:imageView];
     _avatarImageView = imageView;
 }
 
 - (void)configureSubtitleLabelForMessageType:(JSBubbleMessageType)type
 {
+    CGFloat avatarX = ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) ? 7.0f : 0.5f;
     UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
     label.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     label.backgroundColor = [UIColor clearColor];
     label.textAlignment = (type == JSBubbleMessageTypeOutgoing) ? NSTextAlignmentRight : NSTextAlignmentLeft;
     label.textColor = [UIColor js_messagesTimestampColorClassic];
     label.font = [UIFont systemFontOfSize:12.5f];
-    
+    label.frame = CGRectMake(kJSLabelPadding + avatarX,
+                                          self.contentView.frame.size.height - kJSSubtitleLabelHeight,
+                                          self.contentView.frame.size.width - ((avatarX+kJSLabelPadding) * 2.0f),
+                                          kJSSubtitleLabelHeight);
+    label.autoresizingMask = (type == JSBubbleMessageTypeOutgoing) ?
+        (UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin) :
+        (UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin);
+
     [self.contentView addSubview:label];
     _subtitleLabel = label;
 }
@@ -131,6 +139,7 @@ static const CGFloat kJSSubtitleLabelHeight = 15.0f;
          displaysTimestamp:(BOOL)displaysTimestamp
                    avatar:(BOOL)hasAvatar
 {
+    CGFloat avatarX = ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad) ? 7.0f : 0.5f;
     CGFloat bubbleY = 0.0f;
     CGFloat bubbleX = 0.0f;
     
@@ -147,9 +156,9 @@ static const CGFloat kJSSubtitleLabelHeight = 15.0f;
     
     if (hasAvatar) {
         offsetX = 4.0f;
-        bubbleX = kJSAvatarImageSize;
+        bubbleX = kJSAvatarImageSize + avatarX;
         if (type == JSBubbleMessageTypeOutgoing) {
-            offsetX = kJSAvatarImageSize - 4.0f;
+            offsetX = kJSAvatarImageSize - 4.0f + avatarX;
         }
         
         [self configureAvatarImageView:[[UIImageView alloc] init] forMessageType:type];
@@ -292,13 +301,6 @@ static const CGFloat kJSSubtitleLabelHeight = 15.0f;
 - (void)layoutSubviews
 {
     [super layoutSubviews];
-    
-    if (self.subtitleLabel) {
-        self.subtitleLabel.frame = CGRectMake(kJSLabelPadding,
-                                              self.contentView.frame.size.height - kJSSubtitleLabelHeight,
-                                              self.contentView.frame.size.width - (kJSLabelPadding * 2.0f),
-                                              kJSSubtitleLabelHeight);
-    }
 }
 
 #pragma mark - Copying
